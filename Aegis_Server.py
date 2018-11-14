@@ -3,19 +3,34 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer  
 import os  
 import cgi
-import csv
+import pandas
+import random
   
 #Create custom HTTPRequestHandler class  
 class AegisHTTPRequestHandler(BaseHTTPRequestHandler):  
 
   def fetchHashTagAccToPersona(self,persona):
+
     print 'Fetching Random HashTag for: ' + persona
-    return "#Dummy"
+
+    rootdir = '/Users/ishaniGupta/Library/Mobile Documents/com~apple~CloudDocs/UCSB_4/Crypto/Project/Aegis/Tree_Data/' #file location  
+    in_mem_dict = pandas.read_csv((rootdir + persona), index_col=0, squeeze=True, header= None).to_dict()
+   
+    alpha = 0.7
+    #fetching random hashtags from in_mem_dict with values greater than alpha
+    while 1 > 0:
+    	hashtag, percent = random.choice(list(in_mem_dict.items()))
+    	if percent < alpha :
+    		continue
+    	else:
+    		break
+
+    return hashtag,percent
 
   #handle GET command  
   def do_GET(self):  
     rootdir = '/Users/ishaniGupta/Library/Mobile Documents/com~apple~CloudDocs/UCSB_4/Crypto/Project/Aegis' #file location  
-    print('GET Request Got...')
+    print('GET Request Recieved...')
     try:  
       if self.path.endswith('.html'):  
         f = open(rootdir + self.path) #open requested file  
@@ -41,8 +56,7 @@ class AegisHTTPRequestHandler(BaseHTTPRequestHandler):
     global gender
     global ethnicity
     global location
-    rootdir = '/Users/ishaniGupta/Library/Mobile Documents/com~apple~CloudDocs/UCSB_4/Crypto/Project/Aegis/Tree_Data' #file location  
-    print('POST Request Got...')
+    print('POST Request Recieved...')
     try:  
       # Parse the form data posted
       form = cgi.FieldStorage(
@@ -72,9 +86,9 @@ class AegisHTTPRequestHandler(BaseHTTPRequestHandler):
 
       persona=gender+"#"+ethnicity+"#"+location+".csv"
       #print(persona)
-      hashtag = self.fetchHashTagAccToPersona(persona)
-      print(hashtag)
+      hashtag, percent = self.fetchHashTagAccToPersona(persona)
       self.wfile.write(hashtag)
+      self.wfile.write('\nPercent : %s\n' % percent)
       return
 
     except:  
